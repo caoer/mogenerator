@@ -71,6 +71,8 @@
     NSString              *outputDir;
     NSString              *machineDir;
     NSString              *humanDir;
+    NSString              *classPrefix;
+    NSString              *classSuffix;
     NSString              *templateGroup;
     BOOL                  _help;
     BOOL                  _version;

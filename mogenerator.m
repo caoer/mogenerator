@@ -682,6 +682,8 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
         {@"output-dir",         'O',   DDGetoptRequiredArgument},
         {@"machine-dir",        'M',   DDGetoptRequiredArgument},
         {@"human-dir",          'H',   DDGetoptRequiredArgument},
+        {@"class-prefix",       0,   DDGetoptRequiredArgument},
+        {@"class-suffix",       0,   DDGetoptRequiredArgument},
         {@"template-group",     0,     DDGetoptRequiredArgument},
         {@"list-source-files",  0,     DDGetoptNoArgument},
         {@"orphaned",           0,     DDGetoptNoArgument},
@@ -726,6 +728,8 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
            "--configuration CONFIG    Only consider entities included in the named\n"
            "                          configuration\n"
            "--base-class CLASS        Custom base class\n"
+           "--class-prefix PREFIX     Class prefix\n"
+           "--class-suffix SUFFIX     Class suffix\n"
            "--base-class-import TEXT  Imports base class as #import TEXT\n"
            "--base-class-force CLASS  Same as --base-class except will force all entities to\n"
            "                          have the specified base class. Even if a super entity\n"
@@ -1068,8 +1072,17 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             
             // Machine header files.
             NSString *extension = (_swift ? @"swift" : @"h");
-            NSString *machineHFileName = [machineDir stringByAppendingPathComponent:
-                                    [NSString stringWithFormat:@"_%@.%@", entityClassName, extension]];
+            NSString *machineHFileName = @"_";
+            if (classPrefix) {
+                machineHFileName = [machineHFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classPrefix]];
+            }
+            machineHFileName = [machineHFileName stringByAppendingString:[NSString stringWithFormat:@"%@", entityClassName]];
+            if (classSuffix) {
+                machineHFileName = [machineHFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classSuffix]];
+            }
+            machineHFileName = [machineHFileName stringByAppendingString:[NSString stringWithFormat:@".%@", extension]];
+            
+            machineHFileName = [machineDir stringByAppendingPathComponent:machineHFileName];
             if (_listSourceFiles) {
                 [machineHFiles addObject:machineHFileName];
             } else {
@@ -1082,10 +1095,18 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             }
             
             // Machine source files.
-            NSString *machineMFileName = nil;
+            NSString *machineMFileName = @"_";
             if (!_swift) {
-                machineMFileName = [machineDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"_%@.m", entityClassName]];
+                if (classPrefix) {
+                    machineMFileName = [machineMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classPrefix]];
+                }
+                machineMFileName = [machineMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", entityClassName]];
+                if (classSuffix) {
+                    machineMFileName = [machineMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classSuffix]];
+                }
+                machineMFileName = [machineMFileName stringByAppendingString:@".m"];
+                
+                machineMFileName = [machineDir stringByAppendingPathComponent:machineMFileName];
                 if (_listSourceFiles) {
                     [machineMFiles addObject:machineMFileName];
                 } else {
@@ -1099,8 +1120,17 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
             }
             
             // Human header files.
-            NSString *humanHFileName = [humanDir stringByAppendingPathComponent:
-                [NSString stringWithFormat:@"%@.%@", entityClassName, extension]];
+            NSString *humanHFileName = @"";
+            if (classPrefix) {
+                humanHFileName = [humanHFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classPrefix]];
+            }
+            humanHFileName = [humanHFileName stringByAppendingString:[NSString stringWithFormat:@"%@", entityClassName]];
+            if (classSuffix) {
+                humanHFileName = [humanHFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classSuffix]];
+            }
+            humanHFileName = [humanHFileName stringByAppendingString:[NSString stringWithFormat:@".%@", extension]];
+            humanHFileName = [humanDir stringByAppendingPathComponent:humanHFileName];
+            
             if (_listSourceFiles) {
                 [humanHFiles addObject:humanHFileName];
             } else {
@@ -1115,10 +1145,34 @@ NSString *ApplicationSupportSubdirectoryName = @"mogenerator";
 
             if (!_swift) {
                 //  Human source files.
-                NSString *humanMFileName = [humanDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"%@.m", entityClassName]];
-                NSString *humanMMFileName = [humanDir stringByAppendingPathComponent:
-                    [NSString stringWithFormat:@"%@.mm", entityClassName]];
+                NSString *humanMFileName = @"";
+                if (classPrefix) {
+                    humanMFileName = [humanMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classPrefix]];
+                }
+                humanMFileName = [humanMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", entityClassName]];
+                if (classSuffix) {
+                    humanMFileName = [humanMFileName stringByAppendingString:[NSString stringWithFormat:@"%@.m", classSuffix]];
+                }
+                else {
+                    humanMFileName = [humanMFileName stringByAppendingString:@".m"];
+                }
+                
+                humanMFileName = [humanDir stringByAppendingPathComponent:humanMFileName];
+                
+                NSString *humanMMFileName = @"";
+                if (classPrefix) {
+                    humanMMFileName = [humanMMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", classPrefix]];
+                }
+                humanMMFileName = [humanMMFileName stringByAppendingString:[NSString stringWithFormat:@"%@", entityClassName]];
+                if (classSuffix) {
+                    humanMMFileName = [humanMMFileName stringByAppendingString:[NSString stringWithFormat:@"%@.mm", classSuffix]];
+                }
+                else {
+                    humanMMFileName = [humanMMFileName stringByAppendingString:@".mm"];
+                }
+                
+                humanMMFileName = [humanDir stringByAppendingPathComponent:humanMMFileName];
+                
                 if (![fm regularFileExistsAtPath:humanMFileName] && [fm regularFileExistsAtPath:humanMMFileName]) {
                     //  Allow .mm human files as well as .m files.
                     humanMFileName = humanMMFileName;
